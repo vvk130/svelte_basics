@@ -259,6 +259,205 @@ Checked input
 
 <input type="checkbox" bind:checked={yes} />
 
-Select bindings
+Group inputs 
 
+{#each ['cookies and cream', 'mint choc chip', 'raspberry ripple'] as flavour}
+	<label>
+		<input
+			type="checkbox"
+			name="flavours"
+			value={flavour}
+			bind:group={flavours}
+		/>
 
+		{flavour}
+	</label>
+{/each}
+
+onMount
+
+<script>
+	import { onMount } from 'svelte';
+	import { paint } from './gradient.js';
+
+	onMount(() => {
+		const canvas = document.querySelector('canvas');
+		const context = canvas.getContext('2d');
+
+		let frame = requestAnimationFrame(function loop(t) {
+			frame = requestAnimationFrame(loop);
+			paint(context, t);
+		});
+
+		return () => {
+			cancelAnimationFrame(frame);
+		};
+	});
+</script>
+
+beforeUpdate and afterUpdate
+
+<script>
+	import Eliza from 'elizabot';
+	import {
+		beforeUpdate,
+		afterUpdate
+	} from 'svelte';
+
+	let div;
+	let autoscroll = false;
+
+	beforeUpdate(() => {
+		if (div) {
+			const scrollableDistance = div.scrollHeight - div.offsetHeight;
+			autoscroll = div.scrollTop > scrollableDistance - 20;
+		}
+	});
+
+	afterUpdate(() => {
+		if (autoscroll) {
+			div.scrollTo(0, div.scrollHeight);
+		}
+	});
+
+    tick
+
+    <script>
+	import { tick } from 'svelte';
+
+	let text = `Select some text and hit the tab key to toggle uppercase`;
+
+	async function handleKeydown(event) {
+		if (event.key !== 'Tab') return;
+
+		event.preventDefault();
+
+		const { selectionStart, selectionEnd, value } = this;
+		const selection = value.slice(selectionStart, selectionEnd);
+
+		const replacement = /[a-z]/.test(selection)
+			? selection.toUpperCase()
+			: selection.toLowerCase();
+
+		text =
+			value.slice(0, selectionStart) +
+			replacement +
+			value.slice(selectionEnd);
+
+		await tick();
+		this.selectionStart = selectionStart;
+		this.selectionEnd = selectionEnd;
+	}
+</script>
+
+<textarea
+	value={text}
+	on:keydown={handleKeydown}
+/>
+
+Writable store
+.update(), set() operations
+
+<script>
+	import { count } from './stores.js';
+
+	function increment() {
+		count.update((n) => n + 1);
+	}
+</script>
+
+<button on:click={increment}>
+	+
+</button>
+
+Autosubscribtions
+
+-Help to avoid boilerplate code, $ before
+-NOTE: Auto-subscription only works with store variables that are declared (or imported) at the top-level scope of a component.
+-NOTE: Any name beginning with $ is assumed to refer to a store value. It's effectively a reserved character — Svelte will prevent you from declaring your own variables with a $ prefix.
+
+<script>
+	import { count } from './stores.js';
+	import Incrementer from './Incrementer.svelte';
+	import Decrementer from './Decrementer.svelte';
+	import Resetter from './Resetter.svelte';
+</script>
+
+<h1>The count is {$count}</h1>
+
+<Incrementer />
+<Decrementer />
+<Resetter />
+
+Readable stores
+
+import { readable } from 'svelte/store';
+
+export const time = readable(new Date(), function start(set) {
+	const interval = setInterval(() => {
+		set(new Date());
+	}, 1000);
+
+	return function stop() {
+		clearInterval(interval);
+	};
+});
+
+<script>
+	import { time } from './stores.js';
+
+	const formatter = new Intl.DateTimeFormat(
+		'en',
+		{
+			hour12: true,
+			hour: 'numeric',
+			minute: '2-digit',
+			second: '2-digit'
+		}
+	);
+</script>
+
+<h1>The time is {formatter.format($time)}</h1>
+
+Derived stores
+
+import { readable, derived } from 'svelte/store';
+
+export const time = readable(new Date(), function start(set) {
+	const interval = setInterval(() => {
+		set(new Date());
+	}, 1000);
+
+	return function stop() {
+		clearInterval(interval);
+	};
+});
+
+const start = new Date();
+
+export const elapsed = derived(
+	time,
+	($time) => Math.round(($time - start) / 1000)
+);
+
+Custom Stores also exist
+
+Store bindings
+
+<script>
+	import { name, greeting } from './stores.js';
+</script>
+
+<h1>{$greeting}</h1>
+<input bind:value={$name} />
+
+<button on:click={() => $name += '!'}>
+	Add exclamation mark!
+</button>
+
+store.js
+import { writable, derived } from 'svelte/store';
+
+export const name = writable('world');
+
+export const greeting = derived(name, ($name) => `Hello ${$name}!`);
