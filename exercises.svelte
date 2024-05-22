@@ -31,3 +31,234 @@ Updating arrays and objects
 <button on:click={addNumber}>
 	Add a number
 </button>
+
+Declaring props
+
+<script>
+    import Nested from './Nested.svelte';
+   </script>
+   
+   <Nested answer={42} />
+
+<script>
+	export let answer;
+</script>
+
+<p>The answer is {answer}</p>
+   
+Default values
+
+<script>
+	export let answer = 'a default answer';
+</script>
+
+<p>The answer is {answer}</p>
+
+<script>
+	import Nested from './Nested.svelte';
+</script>
+
+<Nested answer={42} />
+<Nested />
+
+Spread props
+since the properties of pkg correspond to the component's expected props, we can 'spread' them onto the component instead:
+
+<script>
+	import PackageInfo from './PackageInfo.svelte';
+
+	const pkg = {
+		name: 'svelte',
+		speed: 'blazing',
+		version: 4,
+		website: 'https://svelte.dev'
+	};
+</script>
+
+<PackageInfo {...pkg} />
+
+<script>
+	export let name;
+	export let version;
+	export let speed;
+	export let website;
+
+	$: href = `https://www.npmjs.com/package/${name}`;
+</script>
+
+<p>
+	The <code>{name}</code> package is {speed} fast. Download version {version} from
+	<a {href}>npm</a> and <a href={website}>learn more here</a>
+</p>
+
+Each block
+
+<script>
+	const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet'];
+	let selected = colors[0];
+</script>
+
+<h1 style="color: {selected}">Pick a colour</h1>
+
+<div>
+	{#each colors as color, i}
+		<button
+			aria-current={selected === color}
+			aria-label={color}
+			style="background: {color}"
+			on:click={() => selected = color}
+		>{i + 1}</button>
+	{/each}
+</div>
+
+Keyed each blocks
+
+{#each things as thing (thing.id)}
+	<Thing name={thing.name} />
+{/each}
+
+Await blocks
+
+{#await promise}
+<p>...waiting</p>
+{:then number}
+<p>{number}</p>
+{:catch error}
+	<p>{error.message}</p>
+{/await}
+
+DOM Events
+
+<div on:pointermove={handleMove}>
+	The pointer is at {m.x} x {m.y}
+</div>
+
+Inline handlers
+
+<div
+	on:pointermove={(e) => {
+		m = { x: e.clientX, y: e.clientY };
+	}}
+>
+
+Event modifiers
+
+<button on:click|once={() => alert('clicked')}>
+	Click me
+</button>
+
+The full list of modifiers:
+
+    preventDefault — calls event.preventDefault() before running the handler. Useful for client-side form handling, for example.
+    stopPropagation — calls event.stopPropagation(), preventing the event reaching the next element
+    passive — improves scrolling performance on touch/wheel events (Svelte will add it automatically where it's safe to do so)
+    nonpassive — explicitly set passive: false
+    capture — fires the handler during the capture phase instead of the bubbling phase
+    once — remove the handler after the first time it runs
+    self — only trigger handler if event.target is the element itself
+    trusted — only trigger handler if event.isTrusted is true, meaning the event was triggered by a user action rather than because some JavaScript called element.dispatchEvent(...)
+
+You can chain modifiers together, e.g. on:click|once|capture={...}.
+
+Component events
+
+<script>
+	import { createEventDispatcher } from 'svelte';
+
+	const dispatch = createEventDispatcher();
+
+	function sayHello() {
+		dispatch('message', {
+			text: 'Hello!'
+		});
+	}
+</script>
+
+<button on:click={sayHello}>
+	Click to say hello
+</button>
+
+<script>
+	import Inner from './Inner.svelte';
+
+	function handleMessage(event) {
+		alert(event.detail.text);
+	}
+</script>
+
+<Inner on:message={handleMessage} />
+
+Event forwarding
+
+<script>
+	import Outer from './Outer.svelte';
+
+	function handleMessage(event) {
+		alert(event.detail.text);
+	}
+</script>
+
+<Outer on:message={handleMessage} />
+
+<script>
+	import { createEventDispatcher } from 'svelte';
+
+	const dispatch = createEventDispatcher();
+
+	function sayHello() {
+		dispatch('message', {
+			text: 'Hello!'
+		});
+	}
+</script>
+
+<button on:click={sayHello}>
+	Click to say hello
+</button>
+
+<script>
+	import Inner from './Inner.svelte';
+</script>
+
+<Inner on:message />
+
+DOM event forwarding
+ 
+App.svelte
+<script>
+	import BigRedButton from './BigRedButton.svelte';
+	import horn from './horn.mp3';
+
+	const audio = new Audio();
+	audio.src = horn;
+
+	function handleClick() {
+		audio.load();
+		audio.play();
+	}
+</script>
+
+<BigRedButton on:click={handleClick} />
+
+BigRedButton.svelte
+<button on:click>
+	Push
+</button>
+
+Text input
+
+<script>
+	let name = 'world';
+</script>
+
+<input bind:value={name} />
+
+<h1>Hello {name}!</h1>
+
+Checked input
+
+<input type="checkbox" bind:checked={yes} />
+
+Select bindings
+
+
